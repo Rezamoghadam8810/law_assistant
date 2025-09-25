@@ -3,8 +3,13 @@ import logging
 
 
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s]%(message)s"
-)
+
 logger = logging.getLogger("law_assistant")
+logger.setLevel(logging.INFO)
+
+if not logger.handlers:
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    formatter=logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)

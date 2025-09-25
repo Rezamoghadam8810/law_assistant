@@ -72,7 +72,7 @@ def delete_user(
         logger.warning(f"Tried to delete missing user {user_id}")
         raise HTTPException(status_code=404, detail="User not found")
     logger.info(f"Deleted user {user_id}")
-    return user
+    return {"msg": f"User {user_id} deleted successfully"}
 
 
 @router.put("/{user_id}", response_model=UserOut)
@@ -83,5 +83,7 @@ def update_user(
 ):
     user = crud_user.update_user(db,user_id=user_id,**payload.dict(exclude_unset=True))
     if not user:
+        logger.error(f"Update failed: User {user_id} not found")
         raise HTTPException(status_code=404, detail="user not found")
+    logger.info(f"Updated user {user_id}")
     return user
