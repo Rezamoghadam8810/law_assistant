@@ -2,7 +2,7 @@ from fastapi import APIRouter,Depends,HTTPException,Query,Path
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app.crud import user as crud_user
-from app.schemas.user import UserOut,UserCreate
+from app.schemas.user import UserOut,UserCreate,UserUpdate
 from app.core.logging import logger
 
 
@@ -74,3 +74,14 @@ def delete_user(
     logger.info(f"Deleted user {user_id}")
     return user
 
+
+@router.put("/{user_id}", response_model=UserOut)
+def update_user(
+        user_id: int,
+        payload: UserUpdate,
+        db: Session = Depends(get_db),
+):
+    user = crud_user.update_user(db,user_id=user_id,**payload.dict(exclude_unset=True))
+    if not user:
+        raise HTTPException(status_code=404, detail="user not found")
+    return user

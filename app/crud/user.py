@@ -20,3 +20,14 @@ def delete_user(db:Session,user_id: int):
         db.delete(user)
         db.commit()
         return user
+
+def update_user(db: Session,user_id:int, **kwargs):
+    user = get_user(db,user_id)
+    if not user:
+        return None
+    for key,value in kwargs.items():
+        if value is not None:
+            setattr(user,key,value)
+    db.commit()
+    db.refresh(user)
+    return user
