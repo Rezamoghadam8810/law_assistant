@@ -1,4 +1,4 @@
-from fastapi import APIRouter,Depends,HTTPException
+from fastapi import APIRouter,Depends,HTTPException,Query,Path
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app.crud import user as crud_user
@@ -9,6 +9,13 @@ from app.core.logging import logger
 
 router = APIRouter(prefix="/users", tags=["users"])
 
+
+# @router.get("/ping")
+# def ping():
+#     return {"msg": "pong"}
+
+
+
 # وابستگی برای گرفتن Session
 def get_db():
     db = SessionLocal()
@@ -18,7 +25,7 @@ def get_db():
         db.close()
 
 
-@router.post("/",response_model=UserOut)
+@router.post("/",response_model=UserOut,status_code=201)
 def create_user(payload:UserCreate, db:Session=Depends(get_db)):
     logger.info(f"Creating user: {payload.username}")
     try:
@@ -31,17 +38,22 @@ def create_user(payload:UserCreate, db:Session=Depends(get_db)):
 
 
 @router.get("/",response_model=list[UserOut])
-def read_users(user_id: int=0 ,limit:int=10, db:Session=Depends(get_db)):
+def read_users(
+        skip: int = Query(0,ge=0,description="چند آیتم اول رو رد کن"),
+        limit: int = Query(10,ge=1, le=100, description="چند آیتم برگردان"),
+        db:Session=Depends(get_db),
+):
     logger.info("Fetching users list")
-    user = crud_user.get_users(db,user_id=user_id)
-    if not user:
-        raise HTTPException(status_code=404,detail="User not found")
+    user = crud_user.get_users(db, skip=skip, limit=limit)
     return user
 
 
 
 @router.get("/{user_id}",response_model=UserOut)
-def read_user(user_id: int, db: Session = Depends(get_db)):
+def read_user(
+        user_id: int = Path(..., ge=1,description="شناسه کاربر"),
+        db: Session = Depends(get_db),
+):
     user = crud_user.get_user(db,user_id=user_id)
     if not user:
         logger.warning(f"User {user_id} not found")
@@ -51,7 +63,10 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/{user_id}",response_model=UserOut)
-def delete_user(user_id: int, db: Session = Depends(get_db)):
+def delete_user(
+        user_id: int = Path(...,ge=1,description="شناسه کاربر"),
+        db: Session = Depends(get_db),
+):
     user= crud_user.delete_user(db, user_id=user_id)
     if not user:
         logger.warning(f"Tried to delete missing user {user_id}")
