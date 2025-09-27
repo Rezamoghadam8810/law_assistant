@@ -1,11 +1,23 @@
-from sqlalchemy import Column,Integer,String
-from app.db.session import Base
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, func
+
+from app.db.base import Base
 
 class User(Base):
-    __tablenamr__ = "user"
-    id= Column(Integer, primary_key=True,index=True)
-    username = Column(String(50),unique=True,index=True,nullable=False)
-    email = Column(String(100),unique=True,index=True,nullable=False)
-    full_name = Column(String(100),nullable=True)
+    __tablename__ = "user"
 
-    
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, nullable=False, index=True)
+    email = Column(String, unique=True, nullable=False, index=True)
+    full_name = Column(String, nullable=True)
+    phone_number = Column(String,unic=True,index=True,nullable=False)
+    # 🔑 برای Auth
+    hashed_password = Column(String, nullable=False)  # پسورد هش‌شده
+
+    otp_code = Column(String, nullable=True)
+    otp_expiry = Column(Integer,nullable=True)
+    is_verified = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)  # وضعیت کاربر (فعال/غیرفعال)
+    role = Column(String, default="user")
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())

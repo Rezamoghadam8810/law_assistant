@@ -1,31 +1,47 @@
+from pydantic import BaseModel, EmailStr
 from typing import Optional
-from pydantic import BaseModel,EmailStr,ConfigDict
 
-
+# ✅ پایه برای اشتراک بین مدل‌ها
 class UserBase(BaseModel):
     username: str
-    email : EmailStr
-    full_name: Optional[str] = None
-
-
-
-# ورودی ساخت کاربر
-class UserCreate(BaseModel):
-    username: str
     email: EmailStr
+    phone_number : str
     full_name: Optional[str] = None
 
+# ✅ ساخت کاربر جدید → شامل password
+class UserCreate(UserBase):
+    password: str  # 👈 کاربر خام ارسال می‌کنه
+
+class UserVerifyOTP(BaseModel):
+    phone_number = str
+    otp_code = str
+
+
+# ✅ آپدیت کاربر → همه فیلدها اختیاری
 class UserUpdate(BaseModel):
-    username: Optional[str] =None
-    email: Optional[EmailStr] =None
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
     full_name: Optional[str] = None
+    password: Optional[str] = None
 
-class UserOut(BaseModel):
+# ✅ خروجی کاربر → هیچ‌وقت password نشون داده نمی‌شه
+class UserOut(UserBase):
     id: int
-    username: str
-    email: EmailStr
-    full_name: Optional[str] = None
+    is_active: bool
+    is_verified: bool
 
-    # اجازه بده آبجکت‌های ORM (SQLAlchemy) به JSON تبدیل بشن
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        orm_mode = True
 
+
+class UserLogin(BaseModel):
+    email:str
+    password: str
+
+class PasswordResetRequest(BaseModel):
+    phone_number: str
+
+class PasswordResetVerify(BaseModel):
+    phone_number: str
+    otp_code: str
+    new_password: str
