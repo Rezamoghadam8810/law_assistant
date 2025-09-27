@@ -5,17 +5,13 @@ from app.crud import user as crud_user
 from app.schemas.user import UserOut, UserCreate, UserUpdate
 from app.core.logging import logger
 from app.core.deps import get_current_admin
+from app.db.session import get_db
+from app.models.user import User
+
 
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-# وابستگی برای گرفتن Session
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db   # 👈 حتماً yield (نه return)
-    finally:
-        db.close()
 
 
 @router.post("/", response_model=UserOut, status_code=201)

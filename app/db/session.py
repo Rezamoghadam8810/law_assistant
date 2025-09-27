@@ -9,6 +9,17 @@ SessionLocal = sessionmaker(autocommit=False,autoflush=False,bind=engine)
 
 Base = declarative_base()
 
+# وابستگی برای گرفتن Session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db   # 👈 حتماً yield (نه return)
+    finally:
+        db.close()
+
+
+
+
 def ping_db() -> bool:
 
     try:
