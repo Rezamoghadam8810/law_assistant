@@ -58,6 +58,10 @@ def get_user_by_username(db: Session, username: str):
 def get_user_by_email(db: Session, email: str):
     return db.query(User).filter(User.email == email).first()
 
+def get_user_by_phone(db: Session, phone_number: str):
+    return db.query(User).filter(User.phone_number == phone_number).first()
+
+
 def get_user(db: Session, user_id: int):
     return db.query(User).filter(User.id == user_id).first()
 

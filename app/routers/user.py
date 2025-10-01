@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Path
+from jose import jwt, JWTError
 from sqlalchemy.orm import Session
+
+from app.core.config import settings
 from app.db.session import SessionLocal
 from app.crud import user as crud_user
 from app.schemas.user import UserOut, UserCreate, UserUpdate
@@ -7,6 +10,7 @@ from app.core.logging import logger
 from app.core.deps import get_current_admin
 from app.db.session import get_db
 from app.models.user import User
+from app.core.security import create_access_token
 
 
 
@@ -89,3 +93,17 @@ def update_user(
         raise HTTPException(status_code=404, detail="user not found")
     logger.info(f"Updated user {user_id}")
     return user
+
+@router.post("/refresh")
+def refresh_token(refresh_token: str):
+    try:
+        payload = jwt.decode(refresh_token, settings.secret_key, algorithms=[settings.algorithm])
+        user_id = payload.get("sub")
+        role = payload.get("role")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="توکن نامعتبر است")
+
+        new_access_token = create_access_token(data={"sub": user_id, "role": role}, expires_delta=30)
+        return {"access_token": new_access_token, "token_type": "bearer"}
+    except JWTError:
+        raise HTTPException(status_code=401, detail="توکن نامعتبر یا منقضی شده است")

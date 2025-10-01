@@ -1,11 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException
+from jose import jwt, JWTError
 from sqlalchemy.orm import Session
+
+from app.core.config import settings
 from app.schemas.user import UserLogin
 from app.schemas.user import UserCreate, UserOut, UserVerifyOTP
 from app.crud import user as crud_user
 from app.db.session import get_db
-from app.core.security import verify_password, create_access_token
+from app.core.security import verify_password, create_access_token,create_refresh_token
 from app.schemas.user import PasswordResetRequest, PasswordResetVerify
+from app.schemas.user import TokenRefreshRequest
+
+
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -34,7 +40,12 @@ def verify_otp(data: UserVerifyOTP, db: Session = Depends(get_db)):
 @router.post("/login")
 def login(payload: UserLogin, db: Session = Depends(get_db)):
     # ۱. پیدا کردن کاربر
-    user = crud_user.get_user_by_email(db, payload.email)
+    user = None
+    if payload.email:
+        user = crud_user.get_user_by_email(db, payload.email)
+    elif payload.phone_number:
+        user = crud_user.get_user_by_phone(db, payload.phone_number)
+
     if not user:
         raise HTTPException(status_code=401, detail="کاربر پیدا نشد")
 
@@ -52,6 +63,17 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
         expires_delta=30
     )
 
+    refresh_token = create_refresh_token(
+        data={"sub": str(user.id), "role": user.role},
+        expires_delta=7
+    )
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
+
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/forgot-password")
@@ -67,3 +89,21 @@ def reset_password(payload: PasswordResetVerify, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=400, detail="کد نادرست یا منقضی شده است")
     return {"msg": "رمز عبور با موفقیت تغییر کرد"}
+
+
+@router.post("/refresh")
+def refresh_token(payload: TokenRefreshRequest):
+    try:
+        payload_data = jwt.decode(payload.refresh_token, settings.secret_key, algorithms=[settings.algorithm])
+        user_id = payload_data.get("sub")
+        role = payload_data.get("role")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="توکن نامعتبر است")
+
+        new_access_token = create_access_token(
+            data={"sub": user_id, "role": role},
+            expires_delta=30
+        )
+        return {"access_token": new_access_token, "token_type": "bearer"}
+    except JWTError:
+        raise HTTPException(status_code=401, detail="توکن نامعتبر یا منقضی شده است")

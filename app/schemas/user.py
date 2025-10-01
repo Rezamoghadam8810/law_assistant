@@ -13,8 +13,8 @@ class UserCreate(UserBase):
     password: str  # 👈 کاربر خام ارسال می‌کنه
 
 class UserVerifyOTP(BaseModel):
-    phone_number = str
-    otp_code = str
+    phone_number : str
+    otp_code : str
 
 
 # ✅ آپدیت کاربر → همه فیلدها اختیاری
@@ -36,6 +36,7 @@ class UserOut(UserBase):
 
 class UserLogin(BaseModel):
     email:str
+    phone_number: Optional[str] = None
     password: str
 
 class PasswordResetRequest(BaseModel):
@@ -45,3 +46,6 @@ class PasswordResetVerify(BaseModel):
     phone_number: str
     otp_code: str
     new_password: str
+
+class TokenRefreshRequest(BaseModel):
+    refresh_token: str

@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, func
 
-from app.db.base import Base
+from app.db.base_class import Base
+
 
 class User(Base):
     __tablename__ = "user"
@@ -9,7 +10,7 @@ class User(Base):
     username = Column(String, unique=True, nullable=False, index=True)
     email = Column(String, unique=True, nullable=False, index=True)
     full_name = Column(String, nullable=True)
-    phone_number = Column(String,unic=True,index=True,nullable=False)
+    phone_number = Column(String, unique=True, index=True, nullable=False)
     # 🔑 برای Auth
     hashed_password = Column(String, nullable=False)  # پسورد هش‌شده
 
@@ -21,3 +22,5 @@ class User(Base):
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    subscription_plan = Column(String, nullable=False, default="free")

@@ -1,9 +1,9 @@
-from sqlalchemy.orm import declarative_base
+from app.db.base_class import Base  # 👈 فقط Base از اینجا
 
-# پایه‌ی تمام مدل‌ها
-Base = declarative_base()
+
 
 # 👇 همه مدل‌ها اینجا ایمپورت میشن تا Alembic بتونه ببینه‌شون
 from app.models.user import User  # noqa
 # از این به بعد هر مدل جدیدی ساختی (مثلاً Role, Case, Document و …)
 # همینجا ایمپورت کن
+from app.models.client import Client
