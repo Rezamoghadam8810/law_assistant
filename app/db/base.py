@@ -7,3 +7,4 @@ from app.models.user import User  # noqa
 # از این به بعد هر مدل جدیدی ساختی (مثلاً Role, Case, Document و …)
 # همینجا ایمپورت کن
 from app.models.client import Client
+from app.models.case import Case
